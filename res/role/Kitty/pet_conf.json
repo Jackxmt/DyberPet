@@ -6,7 +6,10 @@
   "refresh": 5,
   "interact_speed":0.02,
 
-  "default": "default",
+  "default": {"day":"default",
+              "evening": "angry",
+              "night": "sleep"
+             },
   "up": "up",
   "down": "down",
   "left": "left",

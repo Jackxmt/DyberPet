@@ -50,11 +50,22 @@ class Animation_worker(QObject):
         self.pet_conf = pet_conf
         self.hp_cut_off = sys_hp_tiers #[0,50,80,100]
         self.current_status = [settings.pet_data.hp_tier,settings.pet_data.fv_lvl] #self._cal_status_type()
-        self.nonDefault_prob_list = sys_nonDefault_prob #[1, 0.05, 0.125, 0.25]
-        self.nonDefault_prob = self.nonDefault_prob_list[self.current_status[0]]
+        #self.nonDefault_prob_list = sys_nonDefault_prob #[1, 0.05, 0.125, 0.25]
+        self.tp1 = int(settings.ANIMATION_MODES['day']['start'])
+        self.tp2 = int(settings.ANIMATION_MODES['evening']['start'])
+        self.tp3 = int(settings.ANIMATION_MODES['night']['start'])
+        settings.anim_mode = determine_animation_mode(self.tp1, self.tp2, self.tp3)
+        self.nonDefault_prob = settings.ANIMATION_MODES[settings.anim_mode]['rand_act_prob'] #self.nonDefault_prob_list[self.current_status[0]]
         self.act_cmlt_prob = self._cal_prob(self.current_status)
         self.is_killed = False
         self.is_paused = False
+
+        self.scheduler = QtScheduler()
+        self.scheduler.start()
+        # Schedule the job to change animation mode
+        self.scheduler.add_job(self.change_mode, 'cron', hour=self.tp1, minute=0)
+        self.scheduler.add_job(self.change_mode, 'cron', hour=self.tp2, minute=0)
+        self.scheduler.add_job(self.change_mode, 'cron', hour=self.tp3, minute=0)
 
 
     def run(self):
@@ -85,8 +96,14 @@ class Animation_worker(QObject):
 
     def update_prob(self):
         self.current_status = [settings.pet_data.hp_tier,settings.pet_data.fv_lvl] #self._cal_status_type()
-        self.nonDefault_prob = self.nonDefault_prob_list[self.current_status[0]]
+        self.nonDefault_prob = settings.ANIMATION_MODES[settings.anim_mode]['rand_act_prob'] #self.nonDefault_prob_list[self.current_status[0]]
         self.act_cmlt_prob = self._cal_prob(self.current_status)
+
+    def change_mode(self):
+        print("Animation mode changed")
+        settings.anim_mode = determine_animation_mode(self.tp1, self.tp2, self.tp3)
+        self.nonDefault_prob = settings.ANIMATION_MODES[settings.anim_mode]['rand_act_prob']
+
 
     def _cal_prob(self, current_status):
         act_conf = settings.act_data.allAct_params[settings.petname]
@@ -138,14 +155,14 @@ class Animation_worker(QObject):
     def hpchange(self, hp_tier, direction):
         self.current_status[0] = int(hp_tier)
         self.act_cmlt_prob = self._cal_prob(self.current_status)
-        self.nonDefault_prob = self.nonDefault_prob_list[self.current_status[0]]
+        #self.nonDefault_prob = self.nonDefault_prob_list[self.current_status[0]]
         #print('animation module is aware of the hp tier change!')
 
     def fvchange(self, fv_lvl):
         self.current_status[1] = int(fv_lvl)
         settings.act_data._pet_refreshed(fv_lvl)
         self.act_cmlt_prob = self._cal_prob(self.current_status)
-        self.nonDefault_prob = self.nonDefault_prob_list[self.current_status[0]]
+        #self.nonDefault_prob = self.nonDefault_prob_list[self.current_status[0]]
         #print('animation module is aware of the fv lvl change! %i'%fv_lvl)
 
     
@@ -163,28 +180,30 @@ class Animation_worker(QObject):
         if settings.focus_timer_on and self.pet_conf.focus:
             acts = [self.pet_conf.focus]
 
-        # If there is only 1 animation, select the default animation mode
-        elif set(self.act_cmlt_prob) == set([0,1]):
-            act_idx = sum([i < 1.0 for i in self.act_cmlt_prob])
-            act_name = list(settings.act_data.allAct_params[settings.petname].keys())[act_idx]
-            acts, accs = self._get_acts(act_name)
-
         # Else random animation mode
         else:
             prob_num_0 = random.uniform(0, 1)
             # Random animation not selected, play default
             if prob_num_0 > self.nonDefault_prob:
-                acts = [self.pet_conf.default]
+                acts = [self.pet_conf.default_dict[settings.anim_mode]]
             # Random animation selected
             else:
                 prob_num = random.uniform(0, 1)
                 act_idx = sum([ i < prob_num for i in self.act_cmlt_prob])
                 # In some situation, no animation is selected (e.g., there is no random animation)
                 if act_idx >= len(self.act_cmlt_prob):
-                    acts = [self.pet_conf.default]
+                    acts = [self.pet_conf.default_dict[settings.anim_mode]]
                 else:
                     act_name = list(settings.act_data.allAct_params[settings.petname].keys())[act_idx]
                     acts, accs = self._get_acts(act_name)
+        
+        # If there is only 1 animation, select the default animation mode
+        '''
+        elif set(self.act_cmlt_prob) == set([0,1]):
+            act_idx = sum([i < 1.0 for i in self.act_cmlt_prob])
+            act_name = list(settings.act_data.allAct_params[settings.petname].keys())[act_idx]
+            acts, accs = self._get_acts(act_name)
+        '''
 
         self._run_acts(acts, accs)
 

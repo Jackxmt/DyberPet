@@ -79,6 +79,31 @@ ITEM_BGC = {'consumable': '#EFEBDF',
 ITEM_BGC_DEFAULT = '#EFEBDF'
 ITEM_BDC = '#B1C790'
 
+ANIMATION_MODES = {
+    "day":{
+        "start": 7,
+        "end": 21,
+        "rand_act_prob": 0.3,
+        "interaction_ok": True,
+        "function_ok": True
+    },
+    "evening":{
+        "start": 21,
+        "end": 0,
+        "rand_act_prob": 0.0,
+        "interaction_ok": True,
+        "function_ok": True
+    },
+    "night":{
+        "start": 0,
+        "end": 7,
+        "rand_act_prob": 0.0,
+        "interaction_ok": False,
+        "function_ok": False
+    }
+}
+
+
 # when falling met the screen boundary, 
 # it will be bounced back with this speed decay factor
 SPEED_DECAY = 0.5
@@ -87,6 +112,9 @@ def init():
     # computer system ==================================================
     global platform
     platform = platform
+
+    global anim_mode
+    anim_mode = 'day'
 
     # check if data directory exists ===================================
     newpath = os.path.join(configdir, 'data')

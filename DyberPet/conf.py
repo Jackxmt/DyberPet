@@ -3,6 +3,7 @@ import glob
 import time
 import os.path
 from datetime import datetime, timedelta
+from datetime import time as datetime_time
 from sys import platform
 from DyberPet.utils import text_wrap, get_child_folder
 
@@ -44,7 +45,8 @@ class PetConfig:
         self.interact_speed = 0.02
         self.dropspeed = 1.0
         #self.gravity = 4.0
-
+        
+        self.default_dict = {}
         self.default = None
         self.up = None
         self.down = None
@@ -101,7 +103,21 @@ class PetConfig:
             act_dict = {k: Act.init_act(v, pic_dict, o.scale, pet_name, 'role', k) for k, v in act_conf.items()}
             o.act_dict = act_dict
             # 载入默认动作
-            o.default = act_dict[conf_params['default']]
+            default_conf = conf_params['default']
+            if isinstance(default_conf, str):
+                o.default_dict = {'day':act_dict[conf_params[default_conf]],
+                                  'evening':act_dict[conf_params[default_conf]],
+                                  'night':act_dict[conf_params[default_conf]]}
+                o.default = act_dict[conf_params['default']]
+            else:
+                # assume it is a dict
+                # assume it has 3 keys
+                # TODO: check all keys
+                o.default_dict = {'day':act_dict[default_conf['day']],
+                             'evening':act_dict[default_conf['evening']],
+                             'night':act_dict[default_conf['night']]}
+                o.default = o.default_dict[determine_animation_mode()]
+            #o.default = act_dict[conf_params['default']]
             o.up = act_dict[conf_params.get('up', 'default')]
             o.down = act_dict[conf_params.get('down', 'default')]
             o.left = act_dict[conf_params.get('left', 'default')]
@@ -1473,7 +1489,14 @@ def _get_q_img(img_file) -> QPixmap:
     return image
 
 
-
+def determine_animation_mode(time_point_1 = 7, time_point_2 = 21, time_point_3 = 0):
+    current_time = datetime.now().time()
+    if datetime_time(time_point_1, 0) <= current_time < datetime_time(time_point_2, 0):
+        return "day"
+    elif datetime_time(time_point_2, 0) <= current_time or current_time < datetime_time(time_point_3, 0):
+        return "evening"
+    else:  # This covers 0:00 to 7:00
+        return "night"
 
 
 

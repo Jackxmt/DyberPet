@@ -2,6 +2,7 @@ import json
 import os
 import time
 from datetime import datetime
+from datetime import time as datetime_time
 import textwrap as tr
 import locale
 from PySide6.QtCore import QTime
@@ -185,6 +186,16 @@ def find_dir_with_subdir(parent_dir, sub_dir):
             filtered_dirs.append(dir_path)
     
     return filtered_dirs
+
+
+def determine_animation_mode(time_point_1=7, time_point_=21, time_point_3=0):
+    current_time = datetime.now().time()
+    if datetime_time(time_point_1, 0) <= current_time < datetime_time(time_point_2, 0):
+        return "day"
+    elif datetime_time(time_point_2, 0) <= current_time or current_time < datetime_time(time_point_3, 0):
+        return "evening"
+    else:
+        return "night"
 
 
 
