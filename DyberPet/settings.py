@@ -90,7 +90,7 @@ ANIMATION_MODES = {
     "evening":{
         "start": 21,
         "end": 0,
-        "rand_act_prob": 0.0,
+        "rand_act_prob": 0.1,
         "interaction_ok": True,
         "function_ok": True
     },
