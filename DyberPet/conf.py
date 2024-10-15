@@ -68,6 +68,7 @@ class PetConfig:
         self.accessory_act = {}
         self.acc_name = []
         self.custom_act = {}
+        self.periodic_act = {}
 
         #self.hp_interval = 15
         #self.fv_interval = 15
@@ -197,6 +198,9 @@ class PetConfig:
 
             # 如果是附属宠物 其和主宠物之间的交互 - v0.3.3 subpet loading switched to another method
             #o.main_interact = conf_params.get("main_interact", {})
+
+            # 周期性动作
+            o.periodic_act = conf_params.get('periodic_act', {})
 
             o.item_favorite = conf_params.get('item_favorite', {})
             o.item_dislike = conf_params.get('item_dislike', {})

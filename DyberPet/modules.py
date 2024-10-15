@@ -67,6 +67,14 @@ class Animation_worker(QObject):
         self.scheduler.add_job(self.change_mode, 'cron', hour=self.tp2, minute=0)
         self.scheduler.add_job(self.change_mode, 'cron', hour=self.tp3, minute=0)
 
+        # Periodic Act
+        if self.pet_conf.periodic_act:
+            period = self.pet_conf.periodic_act.get("period", 60)
+            self.scheduler.add_job(self.on_periodic_act, 'interval', minutes=period)
+        self.on_periodic_act = False
+        self.periodic_act_name = None
+        self.periodic_until = None
+
 
     def run(self):
         """Run animation in a separate thread"""
@@ -100,10 +108,16 @@ class Animation_worker(QObject):
         self.act_cmlt_prob = self._cal_prob(self.current_status)
 
     def change_mode(self):
-        print("Animation mode changed")
         settings.anim_mode = determine_animation_mode(self.tp1, self.tp2, self.tp3)
         self.nonDefault_prob = settings.ANIMATION_MODES[settings.anim_mode]['rand_act_prob']
 
+    def on_periodic_act(self):
+        choice_names = [i for i in self.pet_conf.periodic_act["act_choices"].keys()]
+        choice_probs = [v['prob'] for k,v in self.pet_conf.periodic_act["act_choices"].items()]
+        choice_name = random.choices(choice_names, weights=choice_probs, k=1)[0]
+        self.on_periodic_act = True
+        self.periodic_act_name = self.pet_conf.periodic_act["act_choices"][choice_name]["random_act_name"]
+        self.periodic_until = self.pet_conf.periodic_act["act_choices"][choice_name]["until"]
 
     def _cal_prob(self, current_status):
         act_conf = settings.act_data.allAct_params[settings.petname]
@@ -165,7 +179,10 @@ class Animation_worker(QObject):
         #self.nonDefault_prob = self.nonDefault_prob_list[self.current_status[0]]
         #print('animation module is aware of the fv lvl change! %i'%fv_lvl)
 
-    
+    def empty_periodic_act(self):
+        self.on_periodic_act = False
+        self.periodic_act_name = None
+        self.periodic_until = None
 
     def random_act(self) -> None:
         """
@@ -174,10 +191,13 @@ class Animation_worker(QObject):
         """
         acts = None
         accs = None
-        # If HP type is not starving, this condition also makes sure only starving animation is played
-
         # If under focus timer, play focus animation
-        if settings.focus_timer_on and self.pet_conf.focus:
+        if self.on_periodic_act:
+            acts, accs = self._get_acts(self.periodic_act_name)
+            if self.periodic_until == "finished":
+                self.empty_periodic_act()
+
+        elif settings.focus_timer_on and self.pet_conf.focus:
             acts = [self.pet_conf.focus]
 
         # Else random animation mode
@@ -262,8 +282,8 @@ class Animation_worker(QObject):
         # if this is a skipping act
         if isinstance(act, list):
             for i in range(act[1]):
-                if self.is_paused:
-                    break
+                while self.is_paused:
+                    time.sleep(0.1)
                 if self.is_killed:
                     break
                 time.sleep(act[0]/1000)
@@ -273,8 +293,8 @@ class Animation_worker(QObject):
 
             #while self.is_paused:
             #    time.sleep(0.2)
-            if self.is_paused:
-                break
+            while self.is_paused:
+                time.sleep(0.1)
             if self.is_killed:
                 break
 
@@ -282,8 +302,8 @@ class Animation_worker(QObject):
 
                 #while self.is_paused:
                 #    time.sleep(0.2)
-                if self.is_paused:
-                    break
+                while self.is_paused:
+                    time.sleep(0.1)
                 if self.is_killed:
                     break
 
