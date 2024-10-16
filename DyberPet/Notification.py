@@ -16,7 +16,7 @@ from apscheduler.triggers import interval, date, cron
 from PySide6.QtWidgets import *
 from PySide6.QtCore import QObject, QThread, Signal
 from PySide6.QtCore import Qt, QTimer, QObject, QPoint, QUrl, QRect, QSize, QPropertyAnimation, QAbstractAnimation
-from PySide6.QtGui import QImage, QPixmap, QIcon, QCursor
+from PySide6.QtGui import QImage, QPixmap, QIcon, QCursor, QColor, QPainter
 from PySide6.QtMultimedia import QSoundEffect, QMediaPlayer, QAudioOutput
 
 from qfluentwidgets import TextWrap, TransparentToolButton, BodyLabel
@@ -323,10 +323,15 @@ class DPNote(QWidget):
         icon = bubble_dict['icon']
         
         # Determine reading time
-        if bubble_dict.get("timeout", None):
-            timeout = bubble_dict["timeout"]
+        if bubble_dict.get("countdown", None):
+            timeout = bubble_dict["countdown"]*1000
+            countdown = True
+        elif bubble_dict.get("timeout", None):
+            timeout = bubble_dict["timeout"]*1000
+            countdown = False
         else:
             timeout = max(2000, int(1.2 * 1000 * reading_time(message)))
+            countdown = False
 
         # Get note_type for icon and sound
         if not icon:
@@ -346,7 +351,8 @@ class DPNote(QWidget):
                                 height_margin=height_margin,
                                 message=message,
                                 icon=icon,
-                                timeout=timeout)
+                                timeout=timeout,
+                                countdown = countdown)
         self.bubble_dict[note_index].closed_bubble.connect(self.remove_bubble)
         self.send_main_movement.connect(self.bubble_dict[note_index].move_to_main)
         bubble_height = self.bubble_dict[note_index].height()
@@ -597,6 +603,20 @@ class DyberToaster(QFrame):
         self.message = re.sub(pattern, replace_match, self.message)
 
 
+class VerticalSeparator(QWidget):
+    """ Vertical separator """
+
+    def __init__(self, color, height=3, parent=None):
+        self.color = color
+        super().__init__(parent=parent)
+        self.setFixedWidth(height)
+
+    def paintEvent(self, e):
+        painter = QPainter(self)
+        painter.setRenderHints(QPainter.Antialiasing)
+        painter.setPen(self.color)
+        painter.drawLine(1, 0, 1, self.height())
+
 
 class BubbleText(QFrame):
     closed_bubble = Signal(str, name='closed_bubble')
@@ -607,6 +627,7 @@ class BubbleText(QFrame):
                  message='',
                  icon=None,
                  timeout=5000,
+                 countdown=False,
                  parent=None):
         super().__init__(parent=parent)
 
@@ -614,6 +635,8 @@ class BubbleText(QFrame):
         self.message = message
         self.icon = icon
         self.timeout = timeout
+        self.leftover = int(timeout/1000)
+        self.countdown = countdown
         self.pos_x = pos_x
         self.pos_y = pos_y-settings.current_img.height()-height_margin
         self.height_margin = height_margin
@@ -625,6 +648,10 @@ class BubbleText(QFrame):
         self.opacityAni.setEndValue(1.)
         self.opacityAni.setDuration(100)
         self.opacityAni.finished.connect(self.checkClosed)
+
+        # Count down timer
+        if self.countdown:
+            self.countdown_timer = QTimer(timeout=self.update_countdown)
         
         self.__initWidget()
         self.__setForShow()
@@ -643,6 +670,14 @@ class BubbleText(QFrame):
             self.iconWidget.setPixmap(self.icon)
         else:
             self.iconWidget =  None
+
+        if self.countdown:
+            self.countdownLabel = BodyLabel(self)
+            self.countdownLabel.setAlignment(Qt.AlignCenter)
+            self.countdownLabel.setWordWrap(False)
+            self.countdownLabel.setText(convert_seconds_to_mmss(self.leftover))
+        else:
+            self.countdownLabel = None
 
         self.__initLayout()
         self.adjustSize()
@@ -678,6 +713,14 @@ class BubbleText(QFrame):
         # add message to layout
         if self.message:
             self.hBoxLayout.addWidget(self.contentLabel, 0, Qt.AlignCenter)
+        
+        if self.countdownLabel:
+            spacerItem2 = QSpacerItem(2, 20, QSizePolicy.Fixed, QSizePolicy.Fixed)
+            self.hBoxLayout.addItem(spacerItem2)
+            self.hBoxLayout.addWidget(VerticalSeparator(QColor(20,20,20,175)))
+            spacerItem3 = QSpacerItem(2, 20, QSizePolicy.Fixed, QSizePolicy.Fixed)
+            self.hBoxLayout.addItem(spacerItem3)
+            self.hBoxLayout.addWidget(self.countdownLabel, 0, Qt.AlignCenter)
 
         frame.setLayout(self.hBoxLayout)
         wholebox = QHBoxLayout()
@@ -704,10 +747,12 @@ class BubbleText(QFrame):
         self.setWindowOpacity(1)
 
     def enterEvent(self, event):
-        self.restore()
+        if not self.countdown:
+            self.restore()
 
     def leaveEvent(self, event):
-        self.timer.start()
+        if not self.countdown:
+            self.timer.start()
 
     def hide(self):
         # start hiding
@@ -745,13 +790,17 @@ class BubbleText(QFrame):
         self.timer.start()
         self.show()
         self.opacityAni.start()
+        if self.countdown:
+            self.countdown_timer.start(1000)
 
     def move_to_main(self, pos_x, pos_y):
         self.pos_x = pos_x
         self.pos_y = pos_y-settings.current_img.height()-self.height_margin
         self.move(self.pos_x-self.width()//2, self.pos_y-self.height())
 
-
+    def update_countdown(self):
+        self.leftover -= 1
+        self.countdownLabel.setText(convert_seconds_to_mmss(self.leftover))
 
 
 
@@ -792,3 +841,8 @@ def reading_time(text: str) -> float:
     # Total reading time
     total_reading_time = english_reading_time + chinese_reading_time
     return total_reading_time
+
+
+def convert_seconds_to_mmss(seconds):
+    minutes, seconds = divmod(seconds, 60)
+    return f"{int(minutes):02}:{int(seconds):02}"
