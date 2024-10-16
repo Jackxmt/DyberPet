@@ -556,8 +556,11 @@ class PetWidget(QWidget):
 
             #print(self.mouse_moving, settings.onfloor)
             if settings.onfloor == 1 and not self.mouse_moving:
-                self.patpat()
-                self.workers['Animation']._onSingleClick()
+                if self.workers['Animation'].on_periodic_act and self.workers['Animation'].clicked_note:
+                    self.workers['Animation']._onSingleClick()
+                else:
+                    self.patpat()
+                
 
             else:
 
@@ -1758,6 +1761,7 @@ class PetWidget(QWidget):
         self.workers['Animation'].sig_move_anim.connect(self._move_customized)
         self.workers['Animation'].sig_repaint_anim.connect(self.repaint)
         self.workers['Animation'].acc_regist.connect(self.register_accessory)
+        self.workers['Animation'].sig_setup_bubble.connect(self.register_bubbleText)
 
         # Start the thread
         self.threads['Animation'].start()

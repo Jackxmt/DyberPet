@@ -38,6 +38,7 @@ class Animation_worker(QObject):
     sig_move_anim = Signal(float, float, name='sig_move_anim')
     sig_repaint_anim = Signal()
     acc_regist = Signal(dict, name='acc_regist')
+    sig_setup_bubble = Signal(dict, name='sig_setup_bubble')
 
     def __init__(self, pet_conf, parent=None):
         """
@@ -69,8 +70,8 @@ class Animation_worker(QObject):
 
         # Periodic Act
         if self.pet_conf.periodic_act:
-            period = self.pet_conf.periodic_act.get("period", 60)
-            self.scheduler.add_job(self.on_periodic_act, 'interval', minutes=period)
+            period = self.pet_conf.periodic_act.get("period", 3600)
+            self.scheduler.add_job(self.on_periodic_act, 'interval', seconds=period)
         self.on_periodic_act = False
         self.periodic_act_name = None
         self.periodic_until = None
@@ -109,9 +110,14 @@ class Animation_worker(QObject):
         self.act_cmlt_prob = self._cal_prob(self.current_status)
 
     def _onSingleClick(self):
-        print("check")
         if self.on_periodic_act and self.clicked_note:
-            print("hey!")
+            # setup the bubble text
+            self.sig_setup_bubble.emit({'message': self.clicked_note['message'],
+                                        'countdown': self.clicked_note.get('countdown', None),
+                                        'sound_type': None, 'icon':None
+                                        })
+            # end the periodic act
+            self.empty_periodic_act()
 
     def change_mode(self):
         if not self.on_periodic_act:
@@ -119,13 +125,14 @@ class Animation_worker(QObject):
             self.nonDefault_prob = settings.ANIMATION_MODES[settings.anim_mode]['rand_act_prob']
 
     def on_periodic_act(self):
-        choice_names = [i for i in self.pet_conf.periodic_act["act_choices"].keys()]
-        choice_probs = [v['prob'] for k,v in self.pet_conf.periodic_act["act_choices"].items()]
-        choice_name = random.choices(choice_names, weights=choice_probs, k=1)[0]
-        self.on_periodic_act = True
-        self.periodic_act_name = self.pet_conf.periodic_act["act_choices"][choice_name]["random_act_name"]
-        self.periodic_left_times = self.pet_conf.periodic_act["act_choices"][choice_name].get("max_times", 1)
-        self.clicked_note = self.pet_conf.periodic_act["act_choices"][choice_name].get("clicked_note", {})
+        if not self.on_periodic_act:
+            choice_names = [i for i in self.pet_conf.periodic_act["act_choices"].keys()]
+            choice_probs = [v['prob'] for k,v in self.pet_conf.periodic_act["act_choices"].items()]
+            choice_name = random.choices(choice_names, weights=choice_probs, k=1)[0]
+            self.on_periodic_act = True
+            self.periodic_act_name = self.pet_conf.periodic_act["act_choices"][choice_name]["random_act_name"]
+            self.periodic_left_times = self.pet_conf.periodic_act["act_choices"][choice_name].get("max_times", 1)
+            self.clicked_note = self.pet_conf.periodic_act["act_choices"][choice_name].get("clicked_note", {})
 
     def _cal_prob(self, current_status):
         act_conf = settings.act_data.allAct_params[settings.petname]
