@@ -74,6 +74,7 @@ class Animation_worker(QObject):
         self.on_periodic_act = False
         self.periodic_act_name = None
         self.periodic_until = None
+        self.clicked_note = {}
 
 
     def run(self):
@@ -107,9 +108,15 @@ class Animation_worker(QObject):
         self.nonDefault_prob = settings.ANIMATION_MODES[settings.anim_mode]['rand_act_prob'] #self.nonDefault_prob_list[self.current_status[0]]
         self.act_cmlt_prob = self._cal_prob(self.current_status)
 
+    def _onSingleClick(self):
+        print("check")
+        if self.on_periodic_act and self.clicked_note:
+            print("hey!")
+
     def change_mode(self):
-        settings.anim_mode = determine_animation_mode(self.tp1, self.tp2, self.tp3)
-        self.nonDefault_prob = settings.ANIMATION_MODES[settings.anim_mode]['rand_act_prob']
+        if not self.on_periodic_act:
+            settings.anim_mode = determine_animation_mode(self.tp1, self.tp2, self.tp3)
+            self.nonDefault_prob = settings.ANIMATION_MODES[settings.anim_mode]['rand_act_prob']
 
     def on_periodic_act(self):
         choice_names = [i for i in self.pet_conf.periodic_act["act_choices"].keys()]
@@ -117,7 +124,8 @@ class Animation_worker(QObject):
         choice_name = random.choices(choice_names, weights=choice_probs, k=1)[0]
         self.on_periodic_act = True
         self.periodic_act_name = self.pet_conf.periodic_act["act_choices"][choice_name]["random_act_name"]
-        self.periodic_until = self.pet_conf.periodic_act["act_choices"][choice_name]["until"]
+        self.periodic_left_times = self.pet_conf.periodic_act["act_choices"][choice_name].get("max_times", 1)
+        self.clicked_note = self.pet_conf.periodic_act["act_choices"][choice_name].get("clicked_note", {})
 
     def _cal_prob(self, current_status):
         act_conf = settings.act_data.allAct_params[settings.petname]
@@ -164,8 +172,6 @@ class Animation_worker(QObject):
         #print(act_cmlt_prob)
         return act_cmlt_prob
 
-        
-
     def hpchange(self, hp_tier, direction):
         self.current_status[0] = int(hp_tier)
         self.act_cmlt_prob = self._cal_prob(self.current_status)
@@ -183,6 +189,8 @@ class Animation_worker(QObject):
         self.on_periodic_act = False
         self.periodic_act_name = None
         self.periodic_until = None
+        self.clicked_note = {}
+        self.change_mode()
 
     def random_act(self) -> None:
         """
@@ -194,7 +202,8 @@ class Animation_worker(QObject):
         # If under focus timer, play focus animation
         if self.on_periodic_act:
             acts, accs = self._get_acts(self.periodic_act_name)
-            if self.periodic_until == "finished":
+            self.periodic_left_times -= 1
+            if self.periodic_left_times <= 0:
                 self.empty_periodic_act()
 
         elif settings.focus_timer_on and self.pet_conf.focus:

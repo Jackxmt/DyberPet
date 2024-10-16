@@ -557,6 +557,7 @@ class PetWidget(QWidget):
             #print(self.mouse_moving, settings.onfloor)
             if settings.onfloor == 1 and not self.mouse_moving:
                 self.patpat()
+                self.workers['Animation']._onSingleClick()
 
             else:
 
