@@ -1504,6 +1504,13 @@ def determine_animation_mode(time_point_1 = 7, time_point_2 = 21, time_point_3 =
 
 
 
+class MensesData:
+    """
+    月经数据创建、读取、存储
+    """
 
+    def __init__(self):
 
+        #self.petname = pet_name
+        self.stage = "2"
 
