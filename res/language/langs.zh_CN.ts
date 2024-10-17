@@ -323,22 +323,22 @@ For most of time, App can import the character for you automatically. But in any
     <message>
         <location filename="../../DyberPet/Notification.py" line="265"/>
         <source>Your pet is starving! (Favor point starts decreasing)</source>
-        <translation>宠物要饿死啦！(好感度开始下降)</translation>
+        <translation>宠物要饿死啦！(信任值开始下降)</translation>
     </message>
     <message>
         <location filename="../../DyberPet/Notification.py" line="267"/>
         <source>Your pet is hungry now~ (Favor point stops increasing)</source>
-        <translation>宠物现在很饿哦~（好感度停止增加）</translation>
+        <translation>宠物现在很饿哦~（信任值停止增加）</translation>
     </message>
     <message>
         <location filename="../../DyberPet/Notification.py" line="273"/>
         <source>Congrats! You have reached the max FV level! Thank you for your companionship all this time!</source>
-        <translation>恭喜你！好感度已达上限！感谢这么久以来的陪伴！</translation>
+        <translation>恭喜你！信任值已达上限！感谢这么久以来的陪伴！</translation>
     </message>
     <message>
         <location filename="../../DyberPet/Notification.py" line="276"/>
         <source>Favor leveled up:</source>
-        <translation>好感度升级至</translation>
+        <translation>信任值升级至</translation>
     </message>
     <message>
         <location filename="../../DyberPet/Notification.py" line="276"/>
@@ -665,12 +665,12 @@ For most of time, App can import the MOD for you automatically. But in any case 
     <message>
         <location filename="../../DyberPet/DyberPet.py" line="1422"/>
         <source>Favorability</source>
-        <translation>好感度</translation>
+        <translation>信任值</translation>
     </message>
     <message>
         <location filename="../../DyberPet/DyberPet.py" line="1422"/>
         <source>Favor</source>
-        <translation>好感度</translation>
+        <translation>信任值</translation>
     </message>
     <message>
         <location filename="../../DyberPet/DyberPet.py" line="1574"/>
@@ -1377,7 +1377,7 @@ Please load previous saved data to recover.</source>
     </message>
     <message>
         <source>Favorability</source>
-        <translation>好感度</translation>
+        <translation>信任值</translation>
     </message>
 </context>
 <context>
@@ -1426,7 +1426,7 @@ Please load previous saved data to recover.</source>
     <message>
         <location filename="../../DyberPet/Dashboard/dashboard_widgets.py" line="435"/>
         <source>Favor</source>
-        <translation>好感度</translation>
+        <translation>信任值</translation>
     </message>
 </context>
 <context>
@@ -1587,7 +1587,7 @@ Everytime you finish a 25min Pomodoro, you get coin rewarded</source>
     <message>
         <location filename="../../DyberPet/Dashboard/dashboard_widgets.py" line="1350"/>
         <source>Favor Req</source>
-        <translation>好感度要求 </translation>
+        <translation>信任值要求 </translation>
     </message>
     <message>
         <location filename="../../DyberPet/Dashboard/dashboard_widgets.py" line="1353"/>
@@ -1834,7 +1834,7 @@ Please position your cursor over the item image to see details.</source>
 
 物品可以购买或出售，出售时物品会折价。
 
-物品会随要求被满足（如好感度）而解锁。
+物品会随要求被满足（如信任值）而解锁。
 
 请将鼠标悬停在物品上以查看详情。</translation>
     </message>
