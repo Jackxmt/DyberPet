@@ -31,10 +31,10 @@
   "periodic_act": {
     "period": 3600,
     "act_choices":{
-      "test1": {"random_act_name":"test1", "prob":1.0, "max_times":50, 
+      "test1": {"random_act_name":"test1", "prob":0.9, "max_times":50, 
                 "clicked_note":{"message":"注意爱护眼睛", "countdown":300}
                },
-      "test2": {"random_act_name":"test2", "prob":0.0, "max_times":1}
+      "test2": {"random_act_name":"test2", "prob":0.1, "max_times":1}
     }
   }
 }
