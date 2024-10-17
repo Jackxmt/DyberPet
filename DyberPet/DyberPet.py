@@ -1528,6 +1528,9 @@ class PetWidget(QWidget):
             #随机语音
             self.register_notification('random', '')
 
+        if prob_num_0 > settings.PP_MEMSES_TIPS:
+            self._show_random_tip()
+
     def item_drop_anim(self, item_name):
         item = self.items_data.item_dict[item_name]
         accs = {"name":"item_drop", "item_image":[item['image']]}
@@ -1535,6 +1538,11 @@ class PetWidget(QWidget):
         y = self.pos().y()+self.height()-self.label.height()
         self.setup_acc.emit(accs, x, y)
 
+    def _show_random_tip(self):
+        candidate_idx = [k for k,v in settings.MEMSES_TIPS.items() if v['stage']==settings.menses_data.stage]
+        tip_idx = random.choice(candidate_idx)
+        tip_message = settings.MEMSES_TIPS[tip_idx]['message']
+        self.register_bubbleText({'message': tip_message})
 
 
     def quit(self) -> None:
