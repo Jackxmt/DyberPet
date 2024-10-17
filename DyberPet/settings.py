@@ -5,7 +5,7 @@ from sys import platform
 from collections import defaultdict
 
 from PySide6.QtGui import QImage, QPixmap
-from DyberPet.conf import PetData, TaskData, ActData
+from DyberPet.conf import PetData, TaskData, ActData, MensesData
 from PySide6 import QtCore
 
 if platform == 'win32':
@@ -103,6 +103,9 @@ ANIMATION_MODES = {
     }
 }
 
+# Menses Tips
+MEMSES_TIPS = json.load(open(os.path.join(basedir, 'res/icons/menses/menses_tips.json'), 'r', encoding='UTF-8'))
+PP_MEMSES_TIPS = 0.25
 
 # when falling met the screen boundary, 
 # it will be bounced back with this speed decay factor
@@ -223,6 +226,10 @@ def init():
     # Load in Language Choice ==========================================
     global language_code, translator
     change_translator(language_code)
+
+    # Load in menses data ==============================================
+    global menses_data
+    menses_data = MensesData()
 
 
 
