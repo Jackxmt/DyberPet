@@ -319,8 +319,8 @@ class DPNote(QWidget):
 
         note_index = str(uuid.uuid4())
         message = bubble_dict['message']
-        sound_type = bubble_dict['sound_type']
-        icon = bubble_dict['icon']
+        sound_type = bubble_dict.get('sound_type', None)
+        icon = bubble_dict.get('icon', None)
         
         # Determine reading time
         if bubble_dict.get("countdown", None):
